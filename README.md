@@ -1,2 +1,1 @@
-# Reverie
-iOS 13-14 hibernation
+# I'm doing exams this week. Eta son.
