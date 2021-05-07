@@ -5,6 +5,7 @@
 HBPreferences *preferences;
 
 bool enabled = 1;
+bool underclock= 1;
 bool isSleeping = 0;
 float currentBattery;
 float sleepPercent = 0.05;
@@ -24,20 +25,25 @@ NSTimer* timer = nil;
 - (void) resetPresses;
 @end
 
+@interface SBLockScreenManager : NSObject
++ (id) sharedInstance;
+- (void) setBiometricAutoUnlockingDisabled: (bool) arg1 forReason: (id) arg2;
+@end
+
 @interface SBAirplaneModeController : NSObject
-+ (id)sharedInstance;
-- (void)setInAirplaneMode:(BOOL)arg1;
++ (id )sharedInstance;
+- (void) setInAirplaneMode: (BOOL) arg1;
 @end
 
 @interface _CDBatterySaver : NSObject
-+ (id)sharedInstance;
-- (BOOL)setPowerMode:(long long)arg1 error:(id *)arg2;
++ (id) sharedInstance;
+- (BOOL) setPowerMode: (long long) arg1 error: (id *) arg2;
 @end
 
 @interface NSTask : NSObject
-@property(copy)NSArray* arguments;
-@property(copy)NSString* launchPath;
-- (void)launch;
+@property (copy) NSArray* arguments;
+@property (copy) NSString* launchPath;
+- (void) launch;
 @end
 
 @interface CommonProduct : NSObject

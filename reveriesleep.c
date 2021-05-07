@@ -5,20 +5,19 @@
 #import <IOKit/pwr_mgt/IOPMLib.h>
 
 int main() {
-	mach_port_t master = kIOMasterPortDefault;
-	kern_return_t err = KERN_SUCCESS;
-	io_service_t ref = MACH_PORT_NULL;
+	mach_port_t master_device_port = kIOMasterPortDefault;
+	kern_return_t v5;
+	io_service_t v3;
 
 	setuid(0); // root permission or something
 	setuid(0);
 	setgid(0);
 	setgid(0);
 
-	ref = IORegistryEntryFromPath(kIOMasterPortDefault, "IOPower:/IOPowerConnection/IOPMrootDomain"); // Get a reference to the powermanagement rootdomain
-	if(IO_OBJECT_NULL == ref) return KERN_FAILURE;
-	ref = IOPMFindPowerManagement(master); // get a powermanagement reference for the system
-	if(IO_OBJECT_NULL == ref) return KERN_FAILURE;
-	err = IOPMSleepSystem(ref); // send the hibernate mach message to IOPowerManagement
-	if(KERN_SUCCESS != err) return KERN_FAILURE;
-	return err;
+	v3 = IORegistryEntryFromPath(kIOMasterPortDefault, "IOPower:/IOPowerConnection/IOPMrootDomain"); // ref pwr_mgt root domain
+	if (!v3) return KERN_FAILURE;
+	v4 = IOPMFindPowerManagement(master_device_port); // ref pwr_mgt
+	if (!v4) return KERN_FAILURE;
+	v5 = IOPMSleepSystem(v4); // this is hibernate
+	return v5;
 }

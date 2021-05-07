@@ -5,7 +5,7 @@ INSTALL_TARGET_PROCESSES = SpringBoard
 
 TWEAK_NAME = Reverie
 
-$(TWEAK_NAME)_FILES = _Reverie.x
+$(TWEAK_NAME)_FILES = Reverie.x
 $(TWEAK_NAME)_CFLAGS = -fobjc-arc
 $(TWEAK_NAME)_EXTRA_FRAMEWORKS = UIKit Cephei
 GO_EASY_ON_ME = 1

@@ -1,9 +1,8 @@
 # Reverie
-iOS hibernation. Basically Sentinel but better :)
+iOS hibernation for 13-14.
 
-Thank God exam week is over.
+**Reverie is in beta, it is not on my repo yet.**
 
-known issues:
+Known issues:
 
-- wake from button press takes a few seconds longer than it should. its because of the cpu underclock
-- wake and sleep percent in prefs doesnt do anything because i'm a super-paper with a head full of confetti
+- Wake and sleep percent sliders in prefs don't do anything because i'm super paper with a head full of confetti
