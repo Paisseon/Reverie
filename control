@@ -1,0 +1,8 @@
+Package: ai.paisseon.reverie
+Name: Reverie
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Just a daydream tweak
+Maintainer: paisseon
+Author: paisseon
+Depends: mobilesubstrate, preferenceloader, ws.hbang.common

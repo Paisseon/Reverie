@@ -1,0 +1,10 @@
+{
+    entry = {
+	bundle = ReveriePrefs;
+	cell = PSLinkCell;
+	detail = REVPrefsListController;
+	isController = 1;
+	label = Reverie;
+	icon = icon.png;
+    };
+}
