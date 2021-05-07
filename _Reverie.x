@@ -22,16 +22,16 @@ static CommonProduct *currentProduct;
 	[[UIDevice currentDevice] setProximityMonitoringEnabled: 0]; // disable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode: 1]; // enable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
-	[currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
+	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
 	
 	SpringBoard* sb = (SpringBoard *)[objc_getClass("SpringBoard") sharedApplication]; // get sb class
 	[sb _simulateLockButtonPress]; // lock device
 	isSleeping = 1;
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/crux"]; // if not root reverie bin doesn't work
-	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c binary
+	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
 	[task launch];
-	sleep(4); // reverie.c wakes after 3 seconds for whatever reason, this prevents it
+	sleep(4); // reverie.c wakes after 3 seconds for whatever reason. this prevents it
 }
 
 %new
@@ -39,7 +39,7 @@ static CommonProduct *currentProduct;
 	[[UIDevice currentDevice] setProximityMonitoringEnabled: 1]; // enable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode: 0]; // disable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:0 error:nil]; // disable lpm
-	[currentProduct putDeviceInThermalSimulationMode:@"off"]; // disable cpu throttling
+	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // disable cpu throttling
 
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/killall"]; // respring and kill reverie sleep bin
@@ -96,6 +96,9 @@ static CommonProduct *currentProduct;
     preferences = [[HBPreferences alloc] initWithIdentifier:@"ai.paisseon.reverie"];
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
+    [preferences registerBool:&underclock default:NO forKey:@"Underclock"];
+    //[preferences registerObject:&wakePercent default:@"20" forKey:@"WakePercent"];
+    //[preferences registerObject:&sleepPercent default:@"5" forKey:@"SleepPercent"];
 
     if (enabled) {
     	%init;
