@@ -1,5 +1,5 @@
 SYSROOT = $(THEOS)/sdks/iPhoneOS13.3.sdk
-ARCHS = arm64
+ARCHS = arm64 arm64e
 BUNDLE_NAME = ReverieCC
 $(BUNDLE_NAME)_BUNDLE_EXTENSION = bundle
 $(BUNDLE_NAME)_FILES = ReverieCC.m

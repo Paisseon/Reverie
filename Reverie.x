@@ -6,34 +6,40 @@ static void reverieSleepFromPrefs() {
 
 static CommonProduct *currentProduct;
 
-%hook SpringBoard
-- (void) applicationDidFinishLaunching: (id) arg1 {
-	%orig;
+%hook SBHomeScreenViewController
+- (void) viewDidLoad {
 	isSleeping = 0;
-	// TODO: check to make sure all necessary files exist. /usr/bin/crux and /usr/bin/Reverie
+	// TODO: check to make sure all necessary files exist /usr/bin/crux and /usr/bin/Reverie
 	[[UIDevice currentDevice] setBatteryMonitoringEnabled: 1]; // make ios monitor the battery
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(getCurrentBattery) name:UIDeviceBatteryLevelDidChangeNotification object:nil]; // add observer for battery level
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieSleep) name:@"reveriePrefsNoti" object:nil]; // add observer for prefs sleep button
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieWake) name:@"reverieWakeNoti" object:nil]; // add observer for hardware wake
+	%orig;
 }
 
 %new
 - (void) reverieSleep {
-	// TODO: enable do not disturb without waking
+	isSleeping = 1;
+	int screenWidth = [[UIScreen mainScreen] bounds].size.width * 0.5; // positioning is off for some reason
+	int screenHeight = [[UIScreen mainScreen] bounds].size.height * 0.5; // but does it really matter?
+	reverieView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds]; // init the window used as a backdrop for logo
+	[self.view addSubview:reverieView]; // add the subview to vc
+	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Reverie/logo.png"]]; // get logo from file
+	[reverieView setBackgroundColor:[UIColor blackColor]]; // hey siri play back in black
+	[reverieView addSubview:reverieLogo]; // add logo
+	[reverieLogo setCenter:CGPointMake(screenHeight, screenWidth)]; // move it out of the corner
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:0]; // disable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:1]; // enable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
-	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:1 forReason:@"ai.paisseon.reverie"];
+	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:1 forReason:@"ai.paisseon.reverie"]; // disable automatic biometric unlock
 	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
-	
 	SpringBoard* sb = (SpringBoard *)[objc_getClass("SpringBoard") sharedApplication]; // get sb class
 	[sb _simulateLockButtonPress]; // lock device
-	isSleeping = 1;
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/crux"]; // if not root reverie bin doesn't work
 	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
-	[task launch];
-	sleep(4); // reverie.c wakes if i don't do this. idk why
+	[task launch]; // have a nice dream. see you in hell. - ushiromiya ange
+	sleep(3);
 }
 
 %new
@@ -41,13 +47,13 @@ static CommonProduct *currentProduct;
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:1]; // enable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:0]; // disable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:0 error:nil]; // disable lpm
+	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:0 forReason:@"ai.paisseon.reverie"]; // enable biometrics
 	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // actually disable cpu throttling
 
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/killall"]; // respring and kill reverie sleep bin
 	[task setArguments:[NSArray arrayWithObjects:@"backboardd", nil]];
 	[task launch];
-	isSleeping = 0;
 }
 
 %new
@@ -174,8 +180,8 @@ static CommonProduct *currentProduct;
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&underclock default:YES forKey:@"Underclock"];
-    //[preferences registerObject:&wakePercent default:@".2" forKey:@"WakePercent"]; // this doesn't work for some reason
-    //[preferences registerObject:&sleepPercent default:@".05" forKey:@"SleepPercent"]; // help appreciated
+    //[preferences registerObject:&wakePercent default:@".2" forKey:@"WakePercent"]; fuck gcc, this worked in echidna
+    //[preferences registerObject:&sleepPercent default:@".05" forKey:@"SleepPercent"];
 
     if (enabled) {
     	%init;
