@@ -19,15 +19,12 @@ static CommonProduct *currentProduct;
 
 %new
 - (void) reverieSleep {
-	isSleeping = 1;
-	int screenWidth = [[UIScreen mainScreen] bounds].size.width * 0.5; // positioning is off for some reason
-	int screenHeight = [[UIScreen mainScreen] bounds].size.height * 0.5; // but does it really matter?
-	reverieView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds]; // init the window used as a backdrop for logo
-	[self.view addSubview:reverieView]; // add the subview to vc
-	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Reverie/logo.png"]]; // get logo from file
-	[reverieView setBackgroundColor:[UIColor blackColor]]; // hey siri play back in black
-	[reverieView addSubview:reverieLogo]; // add logo
-	[reverieLogo setCenter:CGPointMake(screenHeight, screenWidth)]; // move it out of the corner
+	reverieView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds]; // init view of entire screen
+	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Reverie/logo.png"]]; // logo from file
+	[self.view addSubview:reverieView]; // adds the screen view
+	[reverieView setBackgroundColor:[UIColor blackColor]]; // hey siri play back(ground) in black
+	[self.view addSubview:reverieLogo]; // add the logo to the screen
+
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:0]; // disable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:1]; // enable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
@@ -38,8 +35,8 @@ static CommonProduct *currentProduct;
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/crux"]; // if not root reverie bin doesn't work
 	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
-	[task launch]; // have a nice dream. see you in hell. - ushiromiya ange
-	sleep(3);
+	[task launch]; // have a nice dream - ᴀɴɢᴇ ʙᴇᴀᴛʀɪᴄᴇ
+	isSleeping = 1;
 }
 
 %new
