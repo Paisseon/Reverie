@@ -5,21 +5,25 @@
 HBPreferences *preferences;
 
 bool enabled = 1;
-bool underclock= 1;
+bool underclock = 1;
+bool viewonpower = 0;
 bool isSleeping = 0;
 float currentBattery;
-float sleepPercent = 0.05;
+float sleepPercent = 0.07;
 float wakePercent = 0.2;
 int wakePresses = 0;
 NSTimer* timer = nil;
-UIImageView* reverieLogo;
-UIView* reverieView;
 
 @interface SpringBoard : UIApplication
 - (void) _simulateLockButtonPress;
+- (void) _simulateHomeButtonPress;
+- (float) getCurrentBattery;
+- (void) reverieSleep;
+- (void) reverieWake;
 @end
 
-@interface SBHomeScreenWindow : UIView
+@interface UIRootSceneWindow : UIWindow
+- (void) reverieOLED;
 @end
 
 @interface SBVolumeControl : NSObject
@@ -50,10 +54,4 @@ UIView* reverieView;
 
 @interface CommonProduct : NSObject
 - (void) putDeviceInThermalSimulationMode: (NSString *) simulationMode;
-@end
-
-@interface SBHomeScreenViewController : UIViewController
-- (float) getCurrentBattery;
-- (void) reverieSleep;
-- (void) reverieWake;
 @end

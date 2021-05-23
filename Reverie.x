@@ -6,25 +6,19 @@ static void reverieSleepFromPrefs() {
 
 static CommonProduct *currentProduct;
 
-%hook SBHomeScreenViewController
-- (void) viewDidLoad {
-	isSleeping = 0;
-	// TODO: check to make sure all necessary files exist /usr/bin/crux and /usr/bin/Reverie
+%hook SpringBoard
+- (void) applicationDidFinishLaunching: (id) arg1 {
+	%orig;
+	// if (![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/crux"] || ![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/Reverie"]) add an alert here saying to reinstall Reverie
 	[[UIDevice currentDevice] setBatteryMonitoringEnabled: 1]; // make ios monitor the battery
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(getCurrentBattery) name:UIDeviceBatteryLevelDidChangeNotification object:nil]; // add observer for battery level
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieSleep) name:@"reveriePrefsNoti" object:nil]; // add observer for prefs sleep button
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieSleep) name:@"reveriePrefsNoti" object:nil]; // add observer for prefs and cc sleep button
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieWake) name:@"reverieWakeNoti" object:nil]; // add observer for hardware wake
-	%orig;
 }
 
 %new
 - (void) reverieSleep {
-	reverieView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds]; // init view of entire screen
-	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Reverie/logo.png"]]; // logo from file
-	[self.view addSubview:reverieView]; // adds the screen view
-	[reverieView setBackgroundColor:[UIColor blackColor]]; // hey siri play back(ground) in black
-	[self.view addSubview:reverieLogo]; // add the logo to the screen
-
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"reverieOLEDNoti" object:nil]; // make the oled window in root scene
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:0]; // disable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:1]; // enable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
@@ -32,6 +26,7 @@ static CommonProduct *currentProduct;
 	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
 	SpringBoard* sb = (SpringBoard *)[objc_getClass("SpringBoard") sharedApplication]; // get sb class
 	[sb _simulateLockButtonPress]; // lock device
+
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/crux"]; // if not root reverie bin doesn't work
 	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
@@ -41,11 +36,12 @@ static CommonProduct *currentProduct;
 
 %new
 - (void) reverieWake {
+	isSleeping = 0;
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:1]; // enable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:0]; // disable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:0 error:nil]; // disable lpm
 	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:0 forReason:@"ai.paisseon.reverie"]; // enable biometrics
-	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // actually disable cpu throttling
+	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // disable cpu throttling
 
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/killall"]; // respring and kill reverie sleep bin
@@ -56,9 +52,35 @@ static CommonProduct *currentProduct;
 %new
 - (float) getCurrentBattery {
 	currentBattery = [[UIDevice currentDevice] batteryLevel]; // get the current battery percent
-	if (currentBattery == sleepPercent && !isSleeping) [self reverieSleep]; // when battery is 5% and not is sleeping
+	if (currentBattery == sleepPercent && !isSleeping) [self reverieSleep]; // when battery is 7% and not is sleeping
 	else if (currentBattery == wakePercent && isSleeping) [self reverieWake]; // when battery is 20% and is sleeping
 	return currentBattery;
+}
+%end
+
+%hook UIRootSceneWindow
+static UIView* reverieView; // thanks u/runtimeoverflow!
+static UIImageView* reverieLogo;
+
+- (id) initWithDisplayConfiguration: (id) arg1 {
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieOLED) name:@"reverieOLEDNoti" object:nil]; // add observer for oled notification
+	return %orig;
+}
+
+%new
+- (void) reverieOLED {
+	CGPoint rootCentre = self.center;
+	reverieView = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; // init view
+	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Reverie/logo.png"]]; // logo from file
+
+	[self addSubview:reverieView];
+	[reverieView setBackgroundColor:[UIColor blackColor]]; // back in black
+	[reverieView setUserInteractionEnabled:0]; // prevent user interaction 
+	[reverieView addSubview:reverieLogo]; // add logo
+	[reverieLogo setFrame:CGRectMake(0,0,50,50)]; // 50x50 frame
+	[reverieLogo setCenter:rootCentre]; // centre logo on the screen
+	[self bringSubviewToFront:reverieView];
+	[reverieView bringSubviewToFront:reverieLogo];
 }
 %end
 
@@ -73,7 +95,7 @@ static CommonProduct *currentProduct;
 
 	if (!timer) return;
 	wakePresses++;
-	if (wakePresses >= 3)
+	if (wakePresses == 3)
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"reverieWakeNoti" object:nil];
 }
 
@@ -82,6 +104,18 @@ static CommonProduct *currentProduct;
 	wakePresses = 0;
 	[timer invalidate];
 	timer = nil;
+}
+%end
+
+%hook CommonProduct // from powercuff by ryan petrich
+- (id) initProduct: (id) data {
+	if (enabled && ((self = %orig()))) if ([self respondsToSelector:@selector(putDeviceInThermalSimulationMode:)]) currentProduct = self;
+	return self;
+}
+
+- (void) dealloc {
+	if (currentProduct == self) currentProduct = nil;
+	%orig();
 }
 %end
 
@@ -101,12 +135,12 @@ static CommonProduct *currentProduct;
 
 %hook SBSleepWakeHardwareButtonInteraction
 - (void )_performWake { // disable sleep button
-	if (isSleeping) return;
+	if (isSleeping && !viewonpower) return;
 	%orig;
 }
 
 - (void) _performSleep { // disable sleep button
-	if (isSleeping) return;
+	if (isSleeping && !viewonpower) return;
 	%orig;
 }
 %end
@@ -114,22 +148,22 @@ static CommonProduct *currentProduct;
 %hook SBLockHardwareButtonActions
 
 - (bool) disallowsSinglePressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping) return 1;
+	if (isSleeping && !viewonpower) return 1;
 	return %orig;
 }
 
 - (bool) disallowsDoublePressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping) return 1;
+	if (isSleeping && !viewonpower) return 1;
 	return %orig;
 }
 
 - (bool) disallowsTriplePressForReason: (id*)arg1 { // disable sleep button
-	if (isSleeping) return 1;
+	if (isSleeping && !viewonpower) return 1;
 	return %orig;
 }
 
 - (bool) disallowsLongPressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping) return 1;
+	if (isSleeping && !viewonpower) return 1;
 	return %orig;
 }
 %end
@@ -155,20 +189,8 @@ static CommonProduct *currentProduct;
 
 %hook SBBacklightController
 - (void) turnOnScreenFullyWithBacklightSource: (long long) arg1 { // prevent display from turning on
-	if (isSleeping) return;
+	if (isSleeping && !viewonpower) return;
 	%orig;
-}
-%end
-
-%hook CommonProduct // from powercuff by ryan petrich
-- (id) initProduct: (id) data {
-	if (enabled && (self = %orig())) if ([self respondsToSelector:@selector(putDeviceInThermalSimulationMode:)]) currentProduct = self;
-	return self;
-}
-
-- (void) dealloc {
-	if (currentProduct == self) currentProduct = nil;
-	%orig();
 }
 %end
 
@@ -177,6 +199,7 @@ static CommonProduct *currentProduct;
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&underclock default:YES forKey:@"Underclock"];
+    [preferences registerBool:&viewonpower default:NO forKey:@"ViewOnPower"];
     //[preferences registerObject:&wakePercent default:@".2" forKey:@"WakePercent"]; fuck gcc, this worked in echidna
     //[preferences registerObject:&sleepPercent default:@".05" forKey:@"SleepPercent"];
 
