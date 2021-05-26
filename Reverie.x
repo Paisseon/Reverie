@@ -1,7 +1,26 @@
 #import "Reverie.h"
 
+static void refreshPrefs() { // using a modified version of skittyprefs
+    CFArrayRef keyList = CFPreferencesCopyKeyList((CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+    if (keyList) {
+        settings = (NSMutableDictionary *)CFBridgingRelease(CFPreferencesCopyMultiple(keyList, (CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost));
+        CFRelease(keyList);
+    } else settings = nil;
+    if (!settings) settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Preferences/%@.plist", bundleIdentifier]];
+
+    enabled = [([settings objectForKey:@"enabled"] ?: @(true)) boolValue];
+    throttleCPU = [([settings objectForKey:@"throttleCPU"] ?: @(true)) boolValue];
+    viewOnPower = [([settings objectForKey:@"viewOnPower"] ?: @(false)) boolValue];
+    sleepPercent = [([settings objectForKey:@"sleepPercent"] ?: @(7)) integerValue];
+    wakePercent = [([settings objectForKey:@"wakePercent"] ?: @(20)) integerValue];
+}
+
+static void PreferencesChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	refreshPrefs();
+}
+
 static void reverieSleepFromPrefs() {
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"reveriePrefsNoti" object:nil]; // send notification when prefs button activated
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"reverieSleepNoti" object:nil]; // send notification when prefs button activated
 }
 
 static CommonProduct *currentProduct;
@@ -9,21 +28,20 @@ static CommonProduct *currentProduct;
 %hook SpringBoard
 - (void) applicationDidFinishLaunching: (id) arg1 {
 	%orig;
-	// if (![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/crux"] || ![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/Reverie"]) add an alert here saying to reinstall Reverie
-	[[UIDevice currentDevice] setBatteryMonitoringEnabled: 1]; // make ios monitor the battery
+	[[UIDevice currentDevice] setBatteryMonitoringEnabled:true]; // make ios monitor the battery
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(getCurrentBattery) name:UIDeviceBatteryLevelDidChangeNotification object:nil]; // add observer for battery level
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieSleep) name:@"reveriePrefsNoti" object:nil]; // add observer for prefs and cc sleep button
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieSleep) name:@"reverieSleepNoti" object:nil]; // add observer for prefs and cc sleep button
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reverieWake) name:@"reverieWakeNoti" object:nil]; // add observer for hardware wake
 }
 
 %new
 - (void) reverieSleep {
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"reverieOLEDNoti" object:nil]; // make the oled window in root scene
-	[[UIDevice currentDevice] setProximityMonitoringEnabled:0]; // disable proximity sensor
-	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:1]; // enable airplane mode
+	[[UIDevice currentDevice] setProximityMonitoringEnabled:false]; // disable proximity sensor
+	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:true]; // enable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
-	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:1 forReason:@"ai.paisseon.reverie"]; // disable automatic biometric unlock
-	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
+	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:true forReason:@"ai.paisseon.reverie"]; // disable automatic biometric unlock
+	if (throttleCPU) [currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
 	SpringBoard* sb = (SpringBoard *)[objc_getClass("SpringBoard") sharedApplication]; // get sb class
 	[sb _simulateLockButtonPress]; // lock device
 
@@ -37,11 +55,11 @@ static CommonProduct *currentProduct;
 %new
 - (void) reverieWake {
 	isSleeping = 0;
-	[[UIDevice currentDevice] setProximityMonitoringEnabled:1]; // enable proximity sensor
-	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:0]; // disable airplane mode
+	[[UIDevice currentDevice] setProximityMonitoringEnabled:true]; // enable proximity sensor
+	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:false]; // disable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:0 error:nil]; // disable lpm
-	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:0 forReason:@"ai.paisseon.reverie"]; // enable biometrics
-	if (underclock) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // disable cpu throttling
+	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:false forReason:@"ai.paisseon.reverie"]; // enable biometrics
+	if (throttleCPU) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // disable cpu throttling
 
 	NSTask* task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/usr/bin/killall"]; // respring and kill reverie sleep bin
@@ -50,16 +68,17 @@ static CommonProduct *currentProduct;
 }
 
 %new
-- (float) getCurrentBattery {
-	currentBattery = [[UIDevice currentDevice] batteryLevel]; // get the current battery percent
-	if (currentBattery == sleepPercent && !isSleeping) [self reverieSleep]; // when battery is 7% and not is sleeping
-	else if (currentBattery == wakePercent && isSleeping) [self reverieWake]; // when battery is 20% and is sleeping
-	return currentBattery;
+- (CGFloat) getCurrentBattery {
+	origBattery = [[UIDevice currentDevice] batteryLevel] * 100; // store original cgfloat to avoid issues
+	currentBattery = (int)origBattery; // cast the current battery percent as integer
+	if (!isSleeping && currentBattery == sleepPercent) [self reverieSleep]; // sleep when at user's sleep percent
+	if (isSleeping && currentBattery == wakePercent) [self reverieWake]; // wake when at user's wake percent
+	return origBattery;
 }
 %end
 
 %hook UIRootSceneWindow
-static UIView* reverieView; // thanks u/runtimeoverflow!
+static UIView* reverieView;
 static UIImageView* reverieLogo;
 
 - (id) initWithDisplayConfiguration: (id) arg1 {
@@ -75,7 +94,7 @@ static UIImageView* reverieLogo;
 
 	[self addSubview:reverieView];
 	[reverieView setBackgroundColor:[UIColor blackColor]]; // back in black
-	[reverieView setUserInteractionEnabled:0]; // prevent user interaction 
+	[reverieView setUserInteractionEnabled:false]; // prevent user interaction 
 	[reverieView addSubview:reverieLogo]; // add logo
 	[reverieLogo setFrame:CGRectMake(0,0,50,50)]; // 50x50 frame
 	[reverieLogo setCenter:rootCentre]; // centre logo on the screen
@@ -135,12 +154,12 @@ static UIImageView* reverieLogo;
 
 %hook SBSleepWakeHardwareButtonInteraction
 - (void )_performWake { // disable sleep button
-	if (isSleeping && !viewonpower) return;
+	if (isSleeping && !viewOnPower) return;
 	%orig;
 }
 
 - (void) _performSleep { // disable sleep button
-	if (isSleeping && !viewonpower) return;
+	if (isSleeping && !viewOnPower) return;
 	%orig;
 }
 %end
@@ -148,22 +167,12 @@ static UIImageView* reverieLogo;
 %hook SBLockHardwareButtonActions
 
 - (bool) disallowsSinglePressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping && !viewonpower) return 1;
-	return %orig;
-}
-
-- (bool) disallowsDoublePressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping && !viewonpower) return 1;
-	return %orig;
-}
-
-- (bool) disallowsTriplePressForReason: (id*)arg1 { // disable sleep button
-	if (isSleeping && !viewonpower) return 1;
+	if (isSleeping && !viewOnPower) return 1;
 	return %orig;
 }
 
 - (bool) disallowsLongPressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping && !viewonpower) return 1;
+	if (isSleeping && !viewOnPower) return 1;
 	return %orig;
 }
 %end
@@ -189,22 +198,17 @@ static UIImageView* reverieLogo;
 
 %hook SBBacklightController
 - (void) turnOnScreenFullyWithBacklightSource: (long long) arg1 { // prevent display from turning on
-	if (isSleeping && !viewonpower) return;
+	if (isSleeping && !viewOnPower) return;
 	%orig;
 }
 %end
 
 %ctor { // prefs stuff
-    preferences = [[HBPreferences alloc] initWithIdentifier:@"ai.paisseon.reverie"];
-
-    [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
-    [preferences registerBool:&underclock default:YES forKey:@"Underclock"];
-    [preferences registerBool:&viewonpower default:NO forKey:@"ViewOnPower"];
-    //[preferences registerObject:&wakePercent default:@".2" forKey:@"WakePercent"]; fuck gcc, this worked in echidna
-    //[preferences registerObject:&sleepPercent default:@".05" forKey:@"SleepPercent"];
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback) PreferencesChangedCallback, (CFStringRef)[NSString stringWithFormat:@"%@.prefschanged", bundleIdentifier], NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+    refreshPrefs();
 
     if (enabled) {
     	%init;
-    	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reverieSleepFromPrefs, (CFStringRef)@"ai.paisseon.reverie/PrefsSleep", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
+    	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reverieSleepFromPrefs, (CFStringRef)@"reverieExternalNoti", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
     }
 }

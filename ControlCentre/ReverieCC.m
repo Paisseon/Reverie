@@ -11,7 +11,7 @@
   selected = arg1;
   [super refreshState];
   if (selected) {
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"reveriePrefsNoti" object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reverieSleepNoti" object:nil];
     [self setSelected:0];
   }
 }

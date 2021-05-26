@@ -1,23 +1,24 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
-#import <Cephei/HBPreferences.h>
 
-HBPreferences *preferences;
+static NSString* bundleIdentifier = @"ai.paisseon.reverie";
+static NSMutableDictionary *settings;
 
-bool enabled = 1;
-bool underclock = 1;
-bool viewonpower = 0;
+static bool enabled;
+static bool throttleCPU;
+static bool viewOnPower;
+static int sleepPercent;
+static int wakePercent;
+
 bool isSleeping = 0;
-float currentBattery;
-float sleepPercent = 0.07;
-float wakePercent = 0.2;
+int currentBattery;
 int wakePresses = 0;
+CGFloat origBattery;
 NSTimer* timer = nil;
 
 @interface SpringBoard : UIApplication
 - (void) _simulateLockButtonPress;
-- (void) _simulateHomeButtonPress;
-- (float) getCurrentBattery;
+- (CGFloat) getCurrentBattery;
 - (void) reverieSleep;
 - (void) reverieWake;
 @end

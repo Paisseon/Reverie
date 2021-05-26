@@ -1,8 +1,11 @@
 Package: ai.paisseon.reverie
 Name: Reverie
-Version: 1.0
-Architecture: iphoneos-arm
-Description: Just a daydream tweak
-Maintainer: paisseon
 Author: paisseon
-Depends: mobilesubstrate, preferenceloader, ws.hbang.common
+Description: Let your iPhone daydream
+Maintainer: paisseon
+Version: 1.4
+Depends: firmware (>= 13.0), mobilesubstrate, com.creaturecoding.crux
+Conflicts: com.megadev.sentinel, love.litten.puck
+Architecture: iphoneos-arm
+Icon: https://i.imgur.com/oF8M1mG.png
+SileoDepiction: https://paisseon.github.io/info/reverie.json
