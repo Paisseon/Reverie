@@ -46,7 +46,7 @@ static CommonProduct *currentProduct;
 	[sb _simulateLockButtonPress]; // lock device
 
 	NSTask* task = [[NSTask alloc] init];
-	[task setLaunchPath:@"/usr/bin/crux"]; // if not root reverie bin doesn't work
+	[task setLaunchPath:@"/usr/bin/cruxx"]; // if not root reverie bin doesn't work... this is crux binary by creaturesurvive-- thanks u/darkxdddd. also fuck mainrepo.
 	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
 	[task launch]; // have a nice dream - ᴀɴɢᴇ ʙᴇᴀᴛʀɪᴄᴇ
 	isSleeping = 1;
@@ -103,7 +103,7 @@ static UIImageView* reverieLogo;
 }
 %end
 
-%hook SBVolumeControl // from puck by litten
+%hook SBVolumeControl // thanks litten ^^ 
 - (void) increaseVolume {
 	if (!isSleeping) {
 		%orig;
