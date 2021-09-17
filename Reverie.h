@@ -7,6 +7,7 @@ static NSMutableDictionary *settings;
 static bool enabled;
 static bool throttleCPU;
 static bool viewOnPower;
+static bool hibernateOnCharge;
 static int sleepPercent;
 static int wakePercent;
 

@@ -8,11 +8,12 @@ static void refreshPrefs() { // using a modified version of skittyprefs
     } else settings = nil;
     if (!settings) settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Preferences/%@.plist", bundleIdentifier]];
 
-    enabled = [([settings objectForKey:@"enabled"] ?: @(true)) boolValue];
-    throttleCPU = [([settings objectForKey:@"throttleCPU"] ?: @(true)) boolValue];
-    viewOnPower = [([settings objectForKey:@"viewOnPower"] ?: @(false)) boolValue];
-    sleepPercent = [([settings objectForKey:@"sleepPercent"] ?: @(7)) integerValue];
-    wakePercent = [([settings objectForKey:@"wakePercent"] ?: @(20)) integerValue];
+    enabled           = [([settings objectForKey:@"enabled"] ?: @(true)) boolValue];
+    throttleCPU       = [([settings objectForKey:@"throttleCPU"] ?: @(false)) boolValue];
+	hibernateOnCharge = [([settings objectForKey:@"hibernateOnCharge"] ?: @(false)) boolValue];
+    viewOnPower       = [([settings objectForKey:@"viewOnPower"] ?: @(false)) boolValue];
+    sleepPercent      = [([settings objectForKey:@"sleepPercent"] ?: @(7)) integerValue];
+    wakePercent       = [([settings objectForKey:@"wakePercent"] ?: @(20)) integerValue];
 }
 
 static void PreferencesChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
@@ -36,7 +37,8 @@ static CommonProduct *currentProduct;
 
 %new
 - (void) reverieSleep {
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"reverieOLEDNoti" object:nil]; // make the oled window in root scene
+	if ([[UIDevice currentDevice] batteryState] == UIDeviceBatteryStateCharging && !hibernateOnCharge) return; // if device is charging and user opts out fast charge don't sleep
+	if (viewOnPower)[[NSNotificationCenter defaultCenter] postNotificationName:@"reverieOLEDNoti" object:nil]; // make the oled window in root scene
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:false]; // disable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:true]; // enable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
@@ -46,7 +48,7 @@ static CommonProduct *currentProduct;
 	[sb _simulateLockButtonPress]; // lock device
 
 	NSTask* task = [[NSTask alloc] init];
-	[task setLaunchPath:@"/usr/bin/cruxx"]; // if not root reverie bin doesn't work... this is crux binary by creaturesurvive-- thanks u/darkxdddd. also fuck mainrepo.
+	[task setLaunchPath:@"/usr/bin/cruxx"]; // if not root reverie bin doesn't work... thanks u/darkxdddd. also fuck mainrepo.
 	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
 	[task launch]; // have a nice dream - ᴀɴɢᴇ ʙᴇᴀᴛʀɪᴄᴇ
 	isSleeping = 1;

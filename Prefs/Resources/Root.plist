@@ -3,13 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>darkHeaderColor</key>
-	<string>#ffffff</string>
+	<string>#000000</string>
 	<key>darkTextColor</key>
 	<string>#000000</string>
 	<key>headerColor</key>
 	<string>#000000</string>
-	<key>headerFontPath</key>
-	<string>/Library/Application Support/Pokebox/silkscreen.ttf</string>
 	<key>items</key>
 	<array>
 		<dict>
@@ -32,7 +30,7 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<true/>
+			<false/>
 			<key>defaults</key>
 			<string>ai.paisseon.reverie</string>
 			<key>key</key>
@@ -53,6 +51,20 @@
 			<string>viewOnPower</string>
 			<key>label</key>
 			<string>Reverie OLED View</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>ai.paisseon.reverie.prefschanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>ai.paisseon.reverie</string>
+			<key>key</key>
+			<string>hibernateOnCharge</string>
+			<key>label</key>
+			<string>Hibernate Whilst Charging</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -158,7 +170,7 @@ For you who close your eyes and cover your ears, it is meaningless.</string>
 	<key>name</key>
 	<string>Reverie</string>
 	<key>subtitle</key>
-	<string>Advanced hibernation mode</string>
+	<string>v2.2.0</string>
 	<key>textColor</key>
 	<string>#ffffff</string>
 </dict>

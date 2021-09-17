@@ -1,11 +1,12 @@
 Package: ai.paisseon.reverie
 Name: Reverie
-Author: paisseon
-Description: Let your iPhone daydream
-Maintainer: paisseon
-Version: 1.4
+Author: Paisseon
+Description: Hibernate when your battery gets low
+Maintainer: Paisseon
+Version: 2.2
 Depends: firmware (>= 13.0), mobilesubstrate
 Conflicts: com.megadev.sentinel, love.litten.puck
 Architecture: iphoneos-arm
-Icon: https://i.imgur.com/oF8M1mG.png
+Icon: https://paisseon.github.io/info/reverie.png
 SileoDepiction: https://paisseon.github.io/info/reverie.json
+Depiction: https://paisseon.github.io/info/reverie.html
