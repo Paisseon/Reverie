@@ -1,18 +1,18 @@
 #import "ReverieCC.h"
 
 @implementation ReverieCC
-- (UIImage *) iconGlyph {return [UIImage imageNamed:@"toggleIcon" inBundle:[NSBundle bundleForClass:[self class]] compatibleWithTraitCollection:nil];}
+- (UIImage *) iconGlyph {return [UIImage systemImageNamed:@"moon.zzz.fill"];}
 
 - (UIColor *) selectedColor {return [UIColor clearColor];}
 
-- (BOOL) isSelected {return selected;}
+- (bool) isSelected {return selected;}
 
-- (void) setSelected: (BOOL) arg1 {
-  selected = arg1;
+- (void) setSelected: (bool) arg0 {
+  selected = arg0;
   [super refreshState];
   if (selected) {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"reverieSleepNoti" object:nil];
-    [self setSelected:0];
+    [self setSelected:false];
   }
 }
 @end

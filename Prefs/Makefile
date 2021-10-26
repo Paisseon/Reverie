@@ -2,7 +2,7 @@ BUNDLE_NAME = ReveriePrefs
 
 $(BUNDLE_NAME)_FILES = $(wildcard *.m) $(wildcard SkittyPrefs/*.m)
 $(BUNDLE_NAME)_INSTALL_PATH = /Library/PreferenceBundles
-$(BUNDLE_NAME)_FRAMEWORKS = UIKit CoreGraphics QuartzCore CoreText
+$(BUNDLE_NAME)_FRAMEWORKS = UIKit CoreGraphics QuartzCore CoreText IOKit
 $(BUNDLE_NAME)_PRIVATE_FRAMEWORKS = Preferences
 $(BUNDLE_NAME)_CFLAGS = -fobjc-arc
 

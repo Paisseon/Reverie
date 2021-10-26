@@ -1,5 +1,9 @@
 #import <UIKit/UIKit.h>
-#import <Foundation/Foundation.h>
+#import <stdio.h>
+#import <mach/mach.h>
+#import <IOKit/IOKitLib.h>
+#import <IOKit/pwr_mgt/IOPMLib.h>
+#import <spawn.h>
 
 static NSString* bundleIdentifier = @"ai.paisseon.reverie";
 static NSMutableDictionary *settings;
@@ -19,9 +23,9 @@ NSTimer* timer = nil;
 
 @interface SpringBoard : UIApplication
 - (void) _simulateLockButtonPress;
-- (CGFloat) getCurrentBattery;
 - (void) reverieSleep;
 - (void) reverieWake;
+- (CGFloat) getCurrentBattery;
 @end
 
 @interface UIRootSceneWindow : UIWindow
@@ -46,12 +50,6 @@ NSTimer* timer = nil;
 @interface _CDBatterySaver : NSObject
 + (id) sharedInstance;
 - (BOOL) setPowerMode: (long long) arg1 error: (id *) arg2;
-@end
-
-@interface NSTask : NSObject
-@property (copy) NSArray* arguments;
-@property (copy) NSString* launchPath;
-- (void) launch;
 @end
 
 @interface CommonProduct : NSObject

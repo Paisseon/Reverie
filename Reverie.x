@@ -1,19 +1,19 @@
 #import "Reverie.h"
 
 static void refreshPrefs() { // using a modified version of skittyprefs
-    CFArrayRef keyList = CFPreferencesCopyKeyList((CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-    if (keyList) {
-        settings = (NSMutableDictionary *)CFBridgingRelease(CFPreferencesCopyMultiple(keyList, (CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost));
-        CFRelease(keyList);
-    } else settings = nil;
-    if (!settings) settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Preferences/%@.plist", bundleIdentifier]];
+	CFArrayRef keyList = CFPreferencesCopyKeyList((CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	if (keyList) {
+		settings = (NSMutableDictionary *)CFBridgingRelease(CFPreferencesCopyMultiple(keyList, (CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost));
+		CFRelease(keyList);
+	} else settings = nil;
+	if (!settings) settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Preferences/%@.plist", bundleIdentifier]];
 
-    enabled           = [([settings objectForKey:@"enabled"] ?: @(true)) boolValue];
-    throttleCPU       = [([settings objectForKey:@"throttleCPU"] ?: @(false)) boolValue];
+	enabled           = [([settings objectForKey:@"enabled"] ?: @(true)) boolValue];
+	throttleCPU       = [([settings objectForKey:@"throttleCPU"] ?: @(false)) boolValue];
 	hibernateOnCharge = [([settings objectForKey:@"hibernateOnCharge"] ?: @(false)) boolValue];
-    viewOnPower       = [([settings objectForKey:@"viewOnPower"] ?: @(false)) boolValue];
-    sleepPercent      = [([settings objectForKey:@"sleepPercent"] ?: @(7)) integerValue];
-    wakePercent       = [([settings objectForKey:@"wakePercent"] ?: @(20)) integerValue];
+	viewOnPower       = [([settings objectForKey:@"viewOnPower"] ?: @(false)) boolValue];
+	sleepPercent      = [([settings objectForKey:@"sleepPercent"] ?: @(7)) integerValue];
+	wakePercent       = [([settings objectForKey:@"wakePercent"] ?: @(20)) integerValue];
 }
 
 static void PreferencesChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
@@ -44,29 +44,25 @@ static CommonProduct *currentProduct;
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:1 error:nil]; // enable lpm
 	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:true forReason:@"ai.paisseon.reverie"]; // disable automatic biometric unlock
 	if (throttleCPU) [currentProduct putDeviceInThermalSimulationMode:@"heavy"]; // enable cpu throttling
-	SpringBoard* sb = (SpringBoard *)[objc_getClass("SpringBoard") sharedApplication]; // get sb class
-	[sb _simulateLockButtonPress]; // lock device
-
-	NSTask* task = [[NSTask alloc] init];
-	[task setLaunchPath:@"/usr/bin/cruxx"]; // if not root reverie bin doesn't work... thanks u/darkxdddd. also fuck mainrepo.
-	[task setArguments:[NSArray arrayWithObjects:@"/usr/bin/Reverie", nil]]; // this is reverie.c
-	[task launch]; // have a nice dream - ᴀɴɢᴇ ʙᴇᴀᴛʀɪᴄᴇ
-	isSleeping = 1;
+	io_connect_t port = IOPMFindPowerManagement((mach_port_t)MACH_PORT_NULL); // get the power manager for MACH_PORT_NULL
+	IOPMSleepSystem(port); // have a nice dream
+	IOServiceClose(port); // close the mach port after we're done
+	[self _simulateLockButtonPress]; // lock device
+	isSleeping = true;
 }
 
 %new
 - (void) reverieWake {
-	isSleeping = 0;
+	isSleeping = false;
 	[[UIDevice currentDevice] setProximityMonitoringEnabled:true]; // enable proximity sensor
 	[[%c(SBAirplaneModeController) sharedInstance] setInAirplaneMode:false]; // disable airplane mode
 	[[%c(_CDBatterySaver) sharedInstance] setPowerMode:0 error:nil]; // disable lpm
 	[[%c(SBLockScreenManager) sharedInstance] setBiometricAutoUnlockingDisabled:false forReason:@"ai.paisseon.reverie"]; // enable biometrics
 	if (throttleCPU) [currentProduct putDeviceInThermalSimulationMode:@"off"]; // disable cpu throttling
 
-	NSTask* task = [[NSTask alloc] init];
-	[task setLaunchPath:@"/usr/bin/killall"]; // respring and kill reverie sleep bin
-	[task setArguments:[NSArray arrayWithObjects:@"backboardd", nil]];
-	[task launch];
+	pid_t pid;
+	const char *args[] = {"sbreload", NULL, NULL, NULL};
+	posix_spawn(&pid, "usr/bin/sbreload", NULL, NULL, (char *const *)args, NULL); // respring to disable hibernation
 }
 
 %new
@@ -90,22 +86,22 @@ static UIImageView* reverieLogo;
 
 %new
 - (void) reverieOLED {
-	CGPoint rootCentre = self.center;
+	CGPoint rootCentre = self.center; // centre of the screen
 	reverieView = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; // init view
-	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Reverie/logo.png"]]; // logo from file
-
+	reverieLogo = [[UIImageView alloc] initWithImage:[UIImage systemImageNamed:@"moon.zzz.fill"]]; // get the moon logo from sf symbol
 	[self addSubview:reverieView];
+	
 	[reverieView setBackgroundColor:[UIColor blackColor]]; // back in black
 	[reverieView setUserInteractionEnabled:false]; // prevent user interaction 
 	[reverieView addSubview:reverieLogo]; // add logo
 	[reverieLogo setFrame:CGRectMake(0,0,50,50)]; // 50x50 frame
 	[reverieLogo setCenter:rootCentre]; // centre logo on the screen
-	[self bringSubviewToFront:reverieView];
-	[reverieView bringSubviewToFront:reverieLogo];
+	[self bringSubviewToFront:reverieView]; // bring the black screen to the front
+	[reverieView bringSubviewToFront:reverieLogo]; // and show the logo on top of it (this is only visible element except black)
 }
 %end
 
-%hook SBVolumeControl // thanks litten ^^ 
+%hook SBVolumeControl // thanks to Litten 
 - (void) increaseVolume {
 	if (!isSleeping) {
 		%orig;
@@ -128,7 +124,7 @@ static UIImageView* reverieLogo;
 }
 %end
 
-%hook CommonProduct // from powercuff by ryan petrich
+%hook CommonProduct // thanks to Ryan Petrich
 - (id) initProduct: (id) data {
 	if (enabled && ((self = %orig()))) if ([self respondsToSelector:@selector(putDeviceInThermalSimulationMode:)]) currentProduct = self;
 	return self;
@@ -140,77 +136,80 @@ static UIImageView* reverieLogo;
 }
 %end
 
+// begin code to disable unwanted waking from hardware
+
 %hook SBTapToWakeController
-- (void) tapToWakeDidRecognize: (id) arg1 { // disable tap to wake
+- (void) tapToWakeDidRecognize: (id) arg1 {
 	if (isSleeping) return;
 	%orig;
 }
 %end
 
 %hook SBLiftToWakeController
-- (void) wakeGestureManager: (id) arg1 didUpdateWakeGesture: (long long) arg2 orientation: (int) arg3 { // disable raise to wake
+- (void) wakeGestureManager: (id) arg1 didUpdateWakeGesture: (long long) arg2 orientation: (int) arg3 {
 	if (isSleeping) return;
 	%orig;
 }
 %end
 
 %hook SBSleepWakeHardwareButtonInteraction
-- (void )_performWake { // disable sleep button
+- (void )_performWake {
 	if (isSleeping && !viewOnPower) return;
 	%orig;
 }
 
-- (void) _performSleep { // disable sleep button
+- (void) _performSleep {
 	if (isSleeping && !viewOnPower) return;
 	%orig;
 }
 %end
 
 %hook SBLockHardwareButtonActions
-
-- (bool) disallowsSinglePressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping && !viewOnPower) return 1;
+- (bool) disallowsSinglePressForReason: (id*) arg1 {
+	if (isSleeping && !viewOnPower) return true;
 	return %orig;
 }
 
-- (bool) disallowsLongPressForReason: (id*) arg1 { // disable sleep button
-	if (isSleeping && !viewOnPower) return 1;
+- (bool) disallowsLongPressForReason: (id*) arg1 {
+	if (isSleeping && !viewOnPower) return true;
 	return %orig;
 }
 %end
 
 %hook SBHomeHardwareButton
-- (void) initialButtonDown: (id) arg1 { // disable home button
+- (void) initialButtonDown: (id) arg1 {
 	if (isSleeping) return;
 	%orig;
 }
 
-- (void) singlePressUp: (id) arg1 { // disable home button
+- (void) singlePressUp: (id) arg1 {
 	if (isSleeping) return;
 	%orig;
 }
 %end
 
 %hook SBHomeHardwareButtonActions
-- (void) performLongPressActions { // disable home button
+- (void) performLongPressActions {
 	if (isSleeping) return;
 	%orig;
 }
 %end
 
 %hook SBBacklightController
-- (void) turnOnScreenFullyWithBacklightSource: (long long) arg1 { // prevent display from turning on
+- (void) turnOnScreenFullyWithBacklightSource: (long long) arg1 {
 	if (isSleeping && !viewOnPower) return;
 	%orig;
 }
 %end
 
-%ctor { // prefs stuff
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback) PreferencesChangedCallback, (CFStringRef)[NSString stringWithFormat:@"%@.prefschanged", bundleIdentifier], NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
-    refreshPrefs();
+// end code to disable unwanted waking from hardware
 
-    if (enabled) {
-    	%init;
-    	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reverieSleepFromPrefs, (CFStringRef)@"reverieExternalNoti", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
-    }
+%ctor { // prefs stuff
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback) PreferencesChangedCallback, (CFStringRef)[NSString stringWithFormat:@"%@.prefschanged", bundleIdentifier], NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+	refreshPrefs();
+
+	if (enabled) {
+		%init;
+		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reverieSleepFromPrefs, (CFStringRef)@"reverieExternalNoti", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
+	}
 }
