@@ -3,7 +3,7 @@ Name: Reverie
 Author: Paisseon
 Description: Hibernate when your battery gets low
 Maintainer: Paisseon
-Version: 2.3
+Version: 2.4.1
 Depends: firmware (>= 13.0), mobilesubstrate
 Conflicts: com.megadev.sentinel, love.litten.puck
 Architecture: iphoneos-arm
