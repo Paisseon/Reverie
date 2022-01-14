@@ -29,6 +29,10 @@
 			<string>ai.paisseon.reverie.prefschanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>PSSubtitleSwitchTableCell</string>
+			<key>cellSubtitleText</key>
+			<string>Powercuff/CPUTool users, leave this disabled</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
@@ -43,6 +47,10 @@
 			<string>ai.paisseon.reverie.prefschanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>PSSubtitleSwitchTableCell</string>
+			<key>cellSubtitleText</key>
+			<string>Show a Sentinel-style view for OLED screens</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
@@ -51,6 +59,24 @@
 			<string>viewOnPower</string>
 			<key>label</key>
 			<string>Reverie OLED View</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>ai.paisseon.reverie.prefschanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>PSSubtitleSwitchTableCell</string>
+			<key>cellSubtitleText</key>
+			<string>Allow use of the lock button to wake</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>ai.paisseon.reverie</string>
+			<key>key</key>
+			<string>backupGesture</string>
+			<key>label</key>
+			<string>Backup Gesture</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -170,7 +196,7 @@ For you who close your eyes and cover your ears, it is meaningless.</string>
 	<key>name</key>
 	<string>Reverie</string>
 	<key>subtitle</key>
-	<string>v2.4.0</string>
+	<string>v2.6.2</string>
 	<key>textColor</key>
 	<string>#ffffff</string>
 </dict>

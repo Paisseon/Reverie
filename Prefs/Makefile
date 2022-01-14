@@ -1,4 +1,5 @@
 BUNDLE_NAME = ReveriePrefs
+PREFIX = $(THEOS)/toolchain/Xcode11.xctoolchain/usr/bin/
 
 $(BUNDLE_NAME)_FILES = $(wildcard *.m) $(wildcard SkittyPrefs/*.m)
 $(BUNDLE_NAME)_INSTALL_PATH = /Library/PreferenceBundles

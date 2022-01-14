@@ -1,5 +1,5 @@
 #import <UIKit/UIKit.h>
-#import <stdio.h>
+#import <UserNotifications/UserNotifications.h>
 #import <mach/mach.h>
 #import <IOKit/IOKitLib.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>
@@ -10,6 +10,7 @@ static NSMutableDictionary *settings;
 
 static bool enabled;
 static bool throttleCPU;
+static bool backupGesture;
 static bool viewOnPower;
 static bool hibernateOnCharge;
 static int sleepPercent;
@@ -20,12 +21,15 @@ int currentBattery;
 int wakePresses = 0;
 CGFloat origBattery;
 NSTimer* timer = nil;
+static UIView* reverieView = nil;
+static UIImageView* reverieLogo = nil;
 
 @interface SpringBoard : UIApplication
 - (void) _simulateLockButtonPress;
+- (void) _simulateHomeButtonPress;
 - (void) reverieSleep;
 - (void) reverieWake;
-- (CGFloat) getCurrentBattery;
+- (double) getCurrentBattery;
 @end
 
 @interface UIRootSceneWindow : UIWindow
@@ -55,3 +59,5 @@ NSTimer* timer = nil;
 @interface CommonProduct : NSObject
 - (void) putDeviceInThermalSimulationMode: (NSString *) simulationMode;
 @end
+
+static CommonProduct* currentProduct;

@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>ReveriePrefs</string>
 	<key>CFBundleIdentifier</key>
-	<string>ai.paisseon.satella</string>
+	<string>ai.paisseon.reverie</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
