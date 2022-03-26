@@ -1,0 +1,8 @@
+Package: emt.paisseon.reveriecc
+Name: Reverie CC Module
+Depends: mobilesubstrate ai.paisseon.reverie
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Exactly what it sounds like lol
+Maintainer: paisseon
+Author: paisseon

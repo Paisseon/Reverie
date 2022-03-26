@@ -1,0 +1,12 @@
+Package: emt.paisseon.reverie
+Name: Reverie
+Author: Paisseon
+Maintainer: Paisseon
+Description: Hibernate when your battery gets low
+Version: 2.5
+Depends:  ${ORION}, firmware (>= 13.0), ws.hbang.common (>= 1.17), com.opa334.ccsupport
+Architecture: iphoneos-arm
+Section: Tweaks
+Icon: https://paisseon.github.io/icons/reverie.png
+SileoDepiction: https://paisseon.github.io/depictions/reverie.json
+Depiction: https://paisseon.github.io/depictions/ButNobodyCame.html
