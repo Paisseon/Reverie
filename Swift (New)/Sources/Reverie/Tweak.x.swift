@@ -3,7 +3,9 @@ import ReverieC
 import UIKit
 import CoreFoundation
 
-struct Main: HookGroup {}
+struct Main           : HookGroup {}
+struct BatteryBuddy   : HookGroup {}
+struct NoBatteryBuddy : HookGroup {}
 
 var isHibernating = false
 var recentWake    = false
@@ -16,14 +18,14 @@ let view          = UIView()
 class BatteryHook: ClassHook<_UIBatteryView> {
 	typealias Group = Main
 	
-	func chargePercent() -> Double {
-		let currentBattery = orig.chargePercent()
+	func setChargePercent(_ arg0: Double) {
+		orig.setChargePercent(arg0)
 		
 		if target.chargingState == 1 && !Preferences.shared.fastCharging.boolValue {
-			return currentBattery
+			return
 		}
 		
-		if Int(currentBattery * 100) == Preferences.shared.sleepPercent && !isHibernating && !recentWake && !didAutoSleep {
+		if Int(arg0 * 100) == Preferences.shared.sleepPercent && !isHibernating && !recentWake && !didAutoSleep {
 			didAutoSleep = true
 			didAutoWake  = false
 			
@@ -34,7 +36,7 @@ class BatteryHook: ClassHook<_UIBatteryView> {
 				nil,
 				true
 			)
-		} else if Int(currentBattery * 100) == Preferences.shared.wakePercent && isHibernating && !didAutoWake {
+		} else if Int(arg0 * 100) == Preferences.shared.wakePercent && isHibernating && !didAutoWake {
 			dehibernate()
 			
 			if Preferences.shared.viewOnPower.boolValue {
@@ -47,17 +49,16 @@ class BatteryHook: ClassHook<_UIBatteryView> {
 			didAutoWake                                   = true
 			didAutoSleep                                  = false
 		}
-		
-		return currentBattery
 	}
 }
 
-class VolumeHook: ClassHook<NSObject> {
-	typealias Group       = Main
-	static let targetName = "SBVolumeControl"
+class VolumeHook: ClassHook<SBVolumeControl> {
+	typealias Group = Main
 	
 	func increaseVolume() {
-		if isHibernating {
+		if !isHibernating {
+			orig.increaseVolume()
+		} else {
 			wakePresses += 1
 			
 			if wakePresses == 3 {
@@ -73,8 +74,6 @@ class VolumeHook: ClassHook<NSObject> {
 				
 				dehibernate()
 			}
-		} else {
-			orig.increaseVolume()
 		}
 	}
 }
@@ -118,9 +117,8 @@ class LogoHook: ClassHook<UIRootSceneWindow> {
 	}
 }
 
-class BacklightHook: ClassHook<NSObject> {
-	typealias Group       = Main
-	static let targetName = "SBBacklightController"
+class BacklightHook: ClassHook<SBBacklightController> {
+	typealias Group = Main
 	
 	func turnOnScreenFullyWithBacklightSource(_ arg0: Int64) {
 		if isHibernating && !Preferences.shared.viewOnPower.boolValue {
@@ -133,8 +131,6 @@ class BacklightHook: ClassHook<NSObject> {
 
 class Reverie: Tweak {
 	required init() {
-		if Preferences.shared.enabled.boolValue {
-			Main().activate()
-		}
+		Main().activate()
 	}
 }

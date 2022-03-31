@@ -12,12 +12,16 @@
 
 @interface _UIBatteryView : UIView
 @property (nonatomic, assign, readwrite) NSInteger chargingState;
-- (double) chargePercent;
+- (void) setChargePercent: (double) arg0;
 @end
 
 @interface SBAirplaneModeController : NSObject
 + (id) sharedInstance;
 - (void) setInAirplaneMode: (bool) arg0;
+@end
+
+@interface SBBacklightController : NSObject
+- (void) turnOnScreenFullyWithBacklightSource: (long long) arg0;
 @end
 
 @interface SBLockScreenManager : NSObject
@@ -30,6 +34,10 @@
 + (id) sharedInstance;
 - (bool) togglePlayPauseForEventSource: (long long) arg0;
 - (bool) isPlaying;
+@end
+
+@interface SBVolumeControl : NSObject
+- (void) increaseVolume;
 @end
 
 @interface SpringBoard : UIApplication
