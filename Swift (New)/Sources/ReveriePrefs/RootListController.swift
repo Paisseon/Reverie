@@ -30,7 +30,11 @@ class RootListController: HBRootListController {
 	}
 	
 	@objc func respring() {
-		HBRespringController.respringAndReturn(to: URL(string: "prefs:root=Reverie"))
+		if FileManager.default.fileExists(atPath: "/Library/MobileSubstrate/DynamicLibraries/shuffle.dylib") {
+			HBRespringController.respringAndReturn(to: URL(string: "prefs:root=Tweaks&path=Reverie"))
+		} else {
+			HBRespringController.respringAndReturn(to: URL(string: "prefs:root=Reverie"))
+		}
 	}
 	
 	@objc func sleepNow() {

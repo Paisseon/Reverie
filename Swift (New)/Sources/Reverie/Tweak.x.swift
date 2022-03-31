@@ -17,7 +17,7 @@ class BatteryHook: ClassHook<_UIBatteryView> {
 	typealias Group = Main
 	
 	func chargePercent() -> Double {
-		let currentBattery                                = orig.chargePercent()
+		let currentBattery = orig.chargePercent()
 		
 		if target.chargingState == 1 && !Preferences.shared.fastCharging.boolValue {
 			return currentBattery
