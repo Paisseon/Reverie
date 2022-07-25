@@ -26,7 +26,6 @@ class RootListController: HBRootListController {
 		appearanceSettings.tintColor = UIColor(red: 0.4, green: 0, blue: 0.4, alpha: 1)
 		
 		self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Apply", style: .done, target: self, action: #selector(respring))
-		self.navigationItem.leftBarButtonItem  = UIBarButtonItem(title: "Sleep", style: .done, target: self, action: #selector(sleepNow))
 	}
 	
 	@objc func respring() {
@@ -38,12 +37,6 @@ class RootListController: HBRootListController {
 	}
 	
 	@objc func sleepNow() {
-		CFNotificationCenterPostNotification(
-			CFNotificationCenterGetDarwinNotifyCenter(),
-			CFNotificationName("emt.paisseon.reverie.external" as CFString),
-			nil,
-			nil,
-			true
-		)
+		IPC.shared.post("emt.paisseon.reverie.external")
 	}
 }

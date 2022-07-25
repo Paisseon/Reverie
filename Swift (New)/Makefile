@@ -1,9 +1,9 @@
 SYSROOT = $(THEOS)/sdks/iPhoneOS14.4.sdk/
-ARCHS = arm64 arm64e
-TARGET = iphone:clang:latest:13.0
+ARCHS   = arm64 arm64e
+TARGET  = iphone:clang:latest:13.0
 
-FINALPACKAGE = 1
-DEBUG = 0
+FINALPACKAGE        = 1
+DEBUG               = 0
 THEOS_LEAN_AND_MEAN = 1
 
 INSTALL_TARGET_PROCESSES = SpringBoard
@@ -20,7 +20,7 @@ $(BUNDLE_NAME)_FILES = $(shell find Sources/$(BUNDLE_NAME) -name '*.swift')
 $(BUNDLE_NAME)_INSTALL_PATH = /Library/PreferenceBundles
 $(BUNDLE_NAME)_SWIFTFLAGS = -ISources/$(TWEAK_NAME)C/include
 $(BUNDLE_NAME)_CFLAGS = -fobjc-arc -ISources/$(TWEAK_NAME)C/include
-$(BUNDLE_NAME)_FRAMEWORKS = Preferences IOKit
+$(BUNDLE_NAME)_FRAMEWORKS = Preferences
 $(BUNDLE_NAME)_EXTRA_FRAMEWORKS = Cephei CepheiPrefs
 
 SUBPROJECTS += ControlCentre
