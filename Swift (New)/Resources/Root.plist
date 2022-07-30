@@ -19,7 +19,7 @@
 				<key>icon</key>
 				<string>ic0n.png</string>
 				<key>packageIdentifier</key>
-				<string>emt.paisseon.reverie</string>
+				<string>ai.paisseon.reverie</string>
 			</dict>
 			
 			<!-- basic feature toggles -->
@@ -70,15 +70,15 @@
 				<key>cellClass</key>
 				<string>PSSubtitleSwitchTableCell</string>
 				<key>cellSubtitleText</key>
-				<string>Disable for more aggressive battery saving</string>
+				<string>Less aggressive battery saving, but keeps music playing</string>
 				<key>default</key>
 				<false/>
 				<key>defaults</key>
 				<string>emt.paisseon.reverie</string>
 				<key>key</key>
-				<string>viewOnPower</string>
+				<string>youGaveYourHibernateToMeSoftly</string>
 				<key>label</key>
-				<string>OLED View</string>
+				<string>Soft Hibernate</string>
 			</dict>
 			
 			<!-- sleep and wake sliders -->
@@ -140,6 +140,22 @@
 				<true/>
 				<key>PostNotification</key>
 				<string>emt.paisseon.reverie.prefschanged</string>
+			</dict>
+			
+			<!-- sleep button -->
+			<dict>
+				<key>cell</key>
+				<string>PSGroupCell</string>
+				<key>label</key>
+				<string>To wake up manually, press volume up 3 times!</string>
+			</dict>
+			<dict>
+				<key>action</key>
+				<string>sleepNow</string>
+				<key>cell</key>
+				<string>PSButtonCell</string>
+				<key>label</key>
+				<string>Sleep Now</string>
 			</dict>
 			
 			<!-- links to my stuff -->
