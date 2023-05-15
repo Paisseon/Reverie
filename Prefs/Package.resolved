@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "jinxprefs",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Paisseon/JinxPrefs.git",
+      "state" : {
+        "branch" : "emt",
+        "revision" : "80864f268a94d0b3d803b4acbe4bdcac64b62fdc"
+      }
+    }
+  ],
+  "version" : 2
+}

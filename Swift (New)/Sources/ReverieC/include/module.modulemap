@@ -1,4 +1,0 @@
-module ReverieC {
-    umbrella "."
-    export *
-}
